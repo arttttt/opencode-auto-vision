@@ -1,16 +1,28 @@
-import type { Message, Part, TextPart } from "@opencode-ai/sdk";
+// SDK boundary — thin helpers over @opencode-ai/sdk message/part types.
+// This is the only place that knows about opencode's Message/Part shapes;
+// the rest of the codebase talks to neutral ports.
+
+import type { Message, Part, TextPart, FilePart } from "@opencode-ai/sdk";
 import { randomUUID } from "node:crypto";
-import type { ModelInfo } from "./types.js";
+import { IMAGE_MIME_TYPES, VIDEO_MIME_TYPES } from "./constants.js";
+import { mimeToKind } from "./domain.js";
+import type { ModelInfo, MediaRef } from "./ports.js";
+
+const MEDIA_MIME_TYPES: ReadonlySet<string> = new Set([
+  ...IMAGE_MIME_TYPES,
+  ...VIDEO_MIME_TYPES,
+]);
+
+export function isMediaFilePart(part: Part): part is FilePart {
+  return (
+    part.type === "file" &&
+    MEDIA_MIME_TYPES.has((part as FilePart).mime?.toLowerCase() ?? "")
+  );
+}
 
 export function isTextPart(part: Part): part is TextPart {
   return part.type === "text";
 }
-
-// Transformation flow:
-// 1. findLastUserMessage  -> most recent request
-// 2. extract+save unsupported media from its parts
-// 3. remove those media parts (the model can't use raw blobs)
-// 4. update the text part with injection instructions
 
 export function findLastUserMessage(
   messages: Array<{ info: Message; parts: Part[] }>,
@@ -27,6 +39,18 @@ export function getModelFromMessage(message: {
   info: Message;
 }): ModelInfo | undefined {
   return (message.info as { model?: ModelInfo }).model;
+}
+
+/** Project SDK media FileParts into neutral MediaRef[]. */
+export function projectMediaRefs(parts: Part[]): MediaRef[] {
+  const refs: MediaRef[] = [];
+  for (const part of parts) {
+    if (!isMediaFilePart(part)) continue;
+    const fp = part as FilePart;
+    const kind = mimeToKind(fp.mime);
+    if (kind) refs.push({ id: fp.id, mime: fp.mime, kind });
+  }
+  return refs;
 }
 
 export function removePartsByIds(parts: Part[], ids: Set<string>): Part[] {

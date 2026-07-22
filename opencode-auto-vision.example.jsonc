@@ -8,10 +8,8 @@
   "imageTool": "analyze_image",
   "videoTool": "analyze_video",
 
-  // Where pasted media is dumped before being handed to the MCP tool.
-  "tempDir": "/tmp/opencode-auto-vision",
-
-  // Temp files older than this are removed on plugin load.
+  // Temp files older than this (hours) are removed on plugin load.
+  // Media is saved under the system temp dir ($TMPDIR/opencode-auto-vision).
   "cleanupAfterHours": 24,
 
   // Optional custom prompt template. Variables:

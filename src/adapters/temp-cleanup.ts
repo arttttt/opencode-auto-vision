@@ -1,12 +1,15 @@
+// Adapter — removes stale files from the media temp dir. Pure IO, no policy.
+
 import { readdir, stat, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { getTempDir, getCleanupAfterHours } from "./config.js";
-import type { Logger } from "./types.js";
+import type { Logger } from "../ports.js";
 
-/** Remove temp media files older than cleanupAfterHours. Runs once on plugin load. */
-export async function cleanupOldTempFiles(log: Logger): Promise<void> {
-  const dir = getTempDir();
-  const maxAgeMs = getCleanupAfterHours() * 60 * 60 * 1000;
+export async function cleanupOldTempFiles(
+  dir: string,
+  maxAgeHours: number,
+  log: Logger,
+): Promise<void> {
+  const maxAgeMs = maxAgeHours * 60 * 60 * 1000;
   let entries: string[];
   try {
     entries = await readdir(dir);

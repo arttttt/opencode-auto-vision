@@ -68,7 +68,6 @@ Optional. Drop a file at `~/.config/opencode/opencode-auto-vision.jsonc` (user) 
 {
   "imageTool": "analyze_image",
   "videoTool": "analyze_video",
-  "tempDir": "/tmp/opencode-auto-vision",
   "cleanupAfterHours": 24
 }
 ```
@@ -77,10 +76,11 @@ Optional. Drop a file at `~/.config/opencode/opencode-auto-vision.jsonc` (user) 
 | -------------------- | -------------------------- | ----------------------------------------------------------------- |
 | `imageTool`          | `analyze_image`            | MCP tool the model calls for images.                              |
 | `videoTool`          | `analyze_video`            | MCP tool the model calls for videos.                              |
-| `tempDir`            | `$TMPDIR/opencode-auto-vision` | Where pasted media is saved before being handed to the MCP tool.  |
 | `cleanupAfterHours`  | `24`                       | Temp files older than this are removed on plugin load.            |
 | `promptTemplate`     | built-in                   | Custom prompt. Variables: `{mediaList} {mediaCount} {kind} {toolName} {userText}`. |
 | `forceModels`        | `[]`                       | Patterns (`provider/*`, `*model`, `*`) that force interception.  |
+
+Media is always saved under the system temp dir (`$TMPDIR/opencode-auto-vision`); this is not configurable.
 
 ## Usage
 
