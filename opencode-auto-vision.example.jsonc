@@ -1,0 +1,24 @@
+{
+  // OpenCode Auto Vision — capability-based media routing.
+  // Drop this file at ~/.config/opencode/opencode-auto-vision.jsonc (user)
+  // or .opencode/opencode-auto-vision.jsonc (project). All fields optional.
+
+  // MCP tool names the model should call to analyze media.
+  // For the @z_ai/mcp-server (zai-mcp-server) these are analyze_image / analyze_video.
+  "imageTool": "analyze_image",
+  "videoTool": "analyze_video",
+
+  // Where pasted media is dumped before being handed to the MCP tool.
+  "tempDir": "/tmp/opencode-auto-vision",
+
+  // Temp files older than this are removed on plugin load.
+  "cleanupAfterHours": 24,
+
+  // Optional custom prompt template. Variables:
+  //   {mediaList}  {mediaCount}  {kind}  {toolName}  {userText}
+  // "promptTemplate": "...\n{mediaList}\n...",
+
+  // Force interception for these models even if capabilities say they support media.
+  // Patterns: "*" | "provider/*" | "*model" | "provider/model".
+  // "forceModels": ["some-provider/*"]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "opencode-auto-vision",
+  "version": "0.1.0",
+  "description": "OpenCode plugin that auto-detects a model's media capabilities and routes pasted images/videos to a vision MCP tool — so text-only models can still 'see' pasted media.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist",
+    "opencode-auto-vision.example.jsonc"
+  ],
+  "scripts": {
+    "clean": "node --eval \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "vision",
+    "image",
+    "video",
+    "multimodal",
+    "mcp",
+    "clipboard",
+    "capability"
+  ],
+  "author": "Artem Bambalov",
+  "license": "MIT",
+  "devDependencies": {
+    "@opencode-ai/plugin": "^1.2.26",
+    "@types/node": "^22.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "strip-json-comments": "^5.0.3"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arttttt/opencode-auto-vision.git"
+  },
+  "homepage": "https://github.com/arttttt/opencode-auto-vision#readme",
+  "bugs": {
+    "url": "https://github.com/arttttt/opencode-auto-vision/issues"
+  }
+}
