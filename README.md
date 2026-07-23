@@ -1,5 +1,10 @@
 # opencode-auto-vision
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![OpenCode Plugin](https://img.shields.io/badge/OpenCode-Plugin-green.svg)](https://opencode.ai)
+[![npm version](https://img.shields.io/npm/v/opencode-auto-vision.svg)](https://www.npmjs.com/package/opencode-auto-vision)
+[![GitHub repo](https://img.shields.io/badge/repo-arttttt%2Fopencode--auto--vision-181717?logo=github)](https://github.com/arttttt/opencode-auto-vision)
+
 An [OpenCode](https://opencode.ai) plugin that gives **text-only models** the ability to handle pasted images and videos — by **auto-detecting** whether the current model supports a media kind and, if not, routing the media to a vision **MCP tool**.
 
 Unlike pattern-based vision plugins, you don't enumerate which models to intercept: `opencode-auto-vision` reads each model's declared capabilities (`attachment` + `modalities.input`) and only steps in when the model genuinely can't handle the pasted media. Vision-capable models are skipped automatically.
