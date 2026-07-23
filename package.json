@@ -1,6 +1,6 @@
 {
   "name": "opencode-auto-vision",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "OpenCode plugin that auto-detects a model's media capabilities and routes pasted images/videos to a vision MCP tool — so text-only models can still 'see' pasted media.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
