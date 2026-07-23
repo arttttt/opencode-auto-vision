@@ -3,7 +3,6 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import stripJsonComments from "strip-json-comments";
 import {
   CONFIG_FILENAME,
   CONFIG_FILENAME_JSONC,
@@ -12,6 +11,51 @@ import {
   DEFAULT_CLEANUP_AFTER_HOURS,
 } from "../constants.js";
 import type { PluginConfig } from "../ports.js";
+
+/**
+ * Minimal JSONC comment stripper (// and /\* *\/ outside strings).
+ * Inlined to keep the plugin zero-dependency — so it loads from npm, a local
+ * file:// path, or the plugins dir without any install step.
+ */
+function stripJsonComments(text: string): string {
+  let out = "";
+  let i = 0;
+  let inString = false;
+  while (i < text.length) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (inString) {
+      out += c;
+      if (c === "\\") {
+        out += next ?? "";
+        i += 2;
+        continue;
+      }
+      if (c === '"') inString = false;
+      i++;
+      continue;
+    }
+    if (c === '"') {
+      inString = true;
+      out += c;
+      i++;
+      continue;
+    }
+    if (c === "/" && next === "/") {
+      while (i < text.length && text[i] !== "\n") i++;
+      continue;
+    }
+    if (c === "/" && next === "*") {
+      i += 2;
+      while (i < text.length && !(text[i] === "*" && text[i + 1] === "/")) i++;
+      i += 2;
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
 
 export function defaultConfig(): PluginConfig {
   return {

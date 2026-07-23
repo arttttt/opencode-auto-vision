@@ -25,6 +25,7 @@ import {
   withUpdatedTextPart,
   isTextPart,
 } from "./sdk.js";
+import { debug, dump } from "./debug.js";
 
 export type TransformDeps = {
   config: PluginConfig;
@@ -50,27 +51,41 @@ export function buildTransformHandler(deps: TransformDeps) {
   return async (_input: unknown, output: TransformOutput): Promise<void> => {
     const messages = output.messages;
     const result = findLastUserMessage(messages);
-    if (!result) return;
+    if (!result) {
+      debug("no user message found");
+      return;
+    }
     const { message: lastUser, index } = result;
+    const model = getModelFromMessage(lastUser);
+    debug(`last user message: model=${model?.providerID ?? "?"}/${model?.modelID ?? "?"}, parts=${lastUser.parts.length} types=[${lastUser.parts.map((p) => p.type).join(",")}]`);
 
     const refs = projectMediaRefs(lastUser.parts);
-    if (refs.length === 0) return;
-
-    const model = getModelFromMessage(lastUser);
+    dump("media refs detected", refs);
+    if (refs.length === 0) {
+      debug("no media refs -> nothing to route");
+      return;
+    }
 
     // Which present kinds can't the model handle? (capability auto-detect)
     const kindsPresent = new Set<MediaKind>(refs.map((r) => r.kind));
     const unsupported = new Set<MediaKind>();
     for (const kind of kindsPresent) {
-      if (!(await capabilities.supports(model, kind))) unsupported.add(kind);
+      const ok = await capabilities.supports(model, kind);
+      debug(`capability ${model?.modelID ?? "?"} supports ${kind}: ${ok}`);
+      if (!ok) unsupported.add(kind);
     }
     // Escape hatch: forceModels overrides capabilities.
     if (modelMatchesAnyPattern(config.forceModels, model)) {
+      debug("forceModels match -> marking all present kinds unsupported");
       for (const kind of kindsPresent) unsupported.add(kind);
     }
-    if (unsupported.size === 0) return; // model handles everything natively
+    if (unsupported.size === 0) {
+      debug("model supports all present kinds -> leaving native");
+      return; // model handles everything natively
+    }
 
     const toRoute = selectMediaToRoute(refs, unsupported);
+    debug(`toRoute: ${toRoute.length}`);
     if (toRoute.length === 0) return;
 
     // Strip every routed id even if a save later fails — a raw data: blob
@@ -93,6 +108,7 @@ export function buildTransformHandler(deps: TransformDeps) {
       });
       if (out) saved.push(out);
     }
+    dump("saved media", saved);
 
     if (saved.length === 0) {
       log("failed to process any media");
