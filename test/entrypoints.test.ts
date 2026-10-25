@@ -99,17 +99,45 @@ describe("OpenCode 1.3.4+: exports['./server'], an {id, server} object", () => {
     expect(Object.keys(await value.server(v1Input()))).toEqual(["experimental.chat.messages.transform"]);
   });
 
-  it("engines.opencode admits the OpenCode 1 releases that have the hook, from 1.2.0", () => {
-    expect(pkg.engines.opencode).toBe("^1.2.0");
+  it("engines.opencode admits the OpenCode 1 releases that have the hook, from 1.2.0, and OpenCode 2", () => {
+    expect(pkg.engines.opencode).toBe("^1.2.0 || ^2.0.0");
   });
 });
 
-// No OpenCode 2 entry yet: written for OpenCode 1's hooks, the plugin must be
-// turned away by OpenCode 2, not run half-working. Adding `setup` is the
-// deliberate change that flips this.
 describe("OpenCode 2: <name>/server must default to an {id, setup} object", () => {
-  it("is rejected: the server entry has no setup", async () => {
+  it("accepts the server entry: an object with an id and a setup function", async () => {
     const value = (await load(`${pkg.name}/server`)).default;
-    expect(isRecord(value) && typeof value.setup === "function").toBe(false);
+    expect(isRecord(value)).toBe(true);
+    expect(value.id).toBe(pkg.name);
+    expect(typeof value.setup).toBe("function");
+  });
+
+  it("setup registers the context hook only, and its cleanup removes it", async () => {
+    const { setup } = (await load(`${pkg.name}/server`)).default;
+    const hooks: string[] = [];
+    let disposed = 0;
+    const ctx = {
+      location: { directory: mkdtempSync(join(tmpdir(), "opencode-auto-vision-project-")) },
+      model: { list: async () => ({ data: [] }) },
+      session: {
+        hook: async (name: string) => {
+          hooks.push(name);
+          return { dispose: async () => void (disposed += 1) };
+        },
+      },
+    };
+
+    const cleanup = await setup(ctx);
+    expect(hooks).toEqual(["context"]);
+
+    await cleanup();
+    expect(disposed).toBe(1);
+  });
+
+  it("setup does nothing, rather than throw, under a host without the v2 context it needs", async () => {
+    const { setup } = (await load(`${pkg.name}/server`)).default;
+    for (const ctx of [undefined, {}, { session: { hook: async () => ({ dispose: async () => {} }) } }]) {
+      await expect(setup(ctx)).resolves.toBeUndefined();
+    }
   });
 });

@@ -15,6 +15,18 @@ import { FileMediaStore } from "./adapters/media-store.js";
 import { buildTransformHandler } from "./plugin.js";
 import { debug, dump } from "./debug.js";
 import type { Logger, Notifier } from "./ports.js";
+import { V2CapabilityGateway } from "./v2/capability-gateway.js";
+import { buildContextHandler } from "./v2/context-handler.js";
+import type { V2Cleanup, V2Context } from "./v2/host.js";
+
+function isV2Context(ctx: unknown): ctx is V2Context {
+  const candidate = ctx as Partial<V2Context> | null | undefined;
+  return (
+    typeof candidate?.session?.hook === "function" &&
+    typeof candidate?.model?.list === "function" &&
+    typeof candidate?.location?.directory === "string"
+  );
+}
 
 /** The plugin's id for loaders that read one: its npm package name. */
 export const PLUGIN_ID = "opencode-auto-vision";
@@ -97,3 +109,37 @@ export const AutoVisionPlugin: Plugin = async (input) => {
     },
   };
 };
+
+/**
+ * OpenCode 2's `setup`: the same plugin over v2's API. The `context` hook
+ * (the agent loop's requests only, by the user's choice) routes media;
+ * v2's server API has no log or toast service, so failures go to the
+ * console only — nothing is written into the session.
+ */
+export async function openCodeV2Setup(ctx: V2Context): Promise<V2Cleanup | void> {
+  // A host that calls setup without the v2 context this needs gets a no-op,
+  // not a crash, as in opencode-pr-signature's v2 setup.
+  if (!isV2Context(ctx)) return;
+  const log: Logger = (msg) => console.info(`[${PLUGIN_NAME}] ${msg}`);
+  const notify: Notifier = {
+    warn: (message) => console.warn(`[${PLUGIN_NAME}] ${message}`),
+    error: (message) => console.error(`[${PLUGIN_NAME}] ${message}`),
+  };
+
+  const tempDir = join(tmpdir(), TEMP_DIR_NAME);
+  const config = loadConfig(ctx.location.directory);
+  await cleanupOldTempFiles(tempDir, config.cleanupAfterHours, log);
+
+  const handler = buildContextHandler({
+    config,
+    capabilities: new V2CapabilityGateway(ctx.model, ctx.location.directory),
+    store: new FileMediaStore(tempDir, log, notify),
+    log,
+    notify,
+  });
+  const registration = await ctx.session.hook("context", async (event) => {
+    debug("=== v2 context hook fired ===");
+    await handler(event);
+  });
+  return () => registration.dispose();
+}
