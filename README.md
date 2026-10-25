@@ -65,6 +65,15 @@ And make sure a vision MCP tool is configured, e.g. the Z.AI vision server:
 }
 ```
 
+## Compatibility
+
+| OpenCode | Loads through | Status |
+|---|---|---|
+| 1.0 – 1.1 | the package root | loads, but does nothing: the hook it uses, `experimental.chat.messages.transform`, arrived in 1.2.0 |
+| 1.2 – 1.3.3 | the package root (`main`) | supported |
+| 1.3.4 – 1.x | `exports["./server"]` | supported; `engines.opencode` (`^1.2.0`) is checked on install |
+| 2.x | — | not supported yet: OpenCode 2 rejects the plugin |
+
 ## Configuration
 
 Optional. Drop a file at `~/.config/opencode/opencode-auto-vision.jsonc` (user) or `.opencode/opencode-auto-vision.jsonc` (project). See [`opencode-auto-vision.example.jsonc`](./opencode-auto-vision.example.jsonc).

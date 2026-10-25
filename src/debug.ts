@@ -32,6 +32,9 @@ function truncate(value: unknown, depth = 0): unknown {
 }
 
 export function debug(msg: string): void {
+  // Every hook call dumps the whole conversation: left on, the file grows
+  // without bound (gigabytes) and keeps the user's messages on disk.
+  if (!enabled) return;
   try {
     appendFileSync(path, `[${new Date().toISOString()}] ${msg}\n`);
   } catch {}
