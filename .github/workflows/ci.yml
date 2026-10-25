@@ -17,6 +17,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      # No test runner yet: the handler probe runs against the built dist/.
+      - run: npm test
+      # What ships is dist/: it must build.
       - run: npm run build
-      - run: node test-handler.mjs
