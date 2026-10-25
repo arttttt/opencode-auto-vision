@@ -11,6 +11,7 @@ import type {
   Logger,
   Notifier,
   MediaKind,
+  ModelInfo,
 } from "./ports.js";
 import {
   selectMediaToRoute,
@@ -40,6 +41,32 @@ type TransformOutput = {
 };
 
 /**
+ * The media kinds among `kinds` that `model` can't read natively, by its
+ * capabilities — or all of them when `forceModels` matches it. Shared by the
+ * OpenCode 1 and OpenCode 2 hooks.
+ */
+export async function unsupportedKinds(
+  kinds: Iterable<MediaKind>,
+  model: ModelInfo | undefined,
+  capabilities: CapabilityGateway,
+  config: PluginConfig,
+): Promise<Set<MediaKind>> {
+  const present = [...new Set(kinds)];
+  // Escape hatch: forceModels overrides capabilities.
+  if (modelMatchesAnyPattern(config.forceModels, model)) {
+    debug("forceModels match -> marking all present kinds unsupported");
+    return new Set(present);
+  }
+  const unsupported = new Set<MediaKind>();
+  for (const kind of present) {
+    const ok = await capabilities.supports(model, kind);
+    debug(`capability ${model?.modelID ?? "?"} supports ${kind}: ${ok}`);
+    if (!ok) unsupported.add(kind);
+  }
+  return unsupported;
+}
+
+/**
  * Returns the `experimental.chat.messages.transform` handler.
  * For each user message carrying media the model can't handle natively:
  * resolve a stable path via MediaStore, strip the raw media parts (which would
@@ -67,18 +94,12 @@ export function buildTransformHandler(deps: TransformDeps) {
     }
 
     // Which present kinds can't the model handle? (capability auto-detect)
-    const kindsPresent = new Set<MediaKind>(refs.map((r) => r.kind));
-    const unsupported = new Set<MediaKind>();
-    for (const kind of kindsPresent) {
-      const ok = await capabilities.supports(model, kind);
-      debug(`capability ${model?.modelID ?? "?"} supports ${kind}: ${ok}`);
-      if (!ok) unsupported.add(kind);
-    }
-    // Escape hatch: forceModels overrides capabilities.
-    if (modelMatchesAnyPattern(config.forceModels, model)) {
-      debug("forceModels match -> marking all present kinds unsupported");
-      for (const kind of kindsPresent) unsupported.add(kind);
-    }
+    const unsupported = await unsupportedKinds(
+      refs.map((r) => r.kind),
+      model,
+      capabilities,
+      config,
+    );
     if (unsupported.size === 0) {
       debug("model supports all present kinds -> leaving native");
       return; // model handles everything natively
