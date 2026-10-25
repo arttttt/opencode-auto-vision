@@ -44,6 +44,7 @@
   "license": "MIT",
   "devDependencies": {
     "@opencode-ai/plugin": "^1.2.26",
+    "@opencode/ai": "^2.1.4",
     "@types/node": "^22.0.0",
     "prettier": "^3.8.1",
     "typescript": "^5.7.0",
@@ -54,7 +55,7 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "opencode": "^1.2.0"
+    "opencode": "^1.2.0 || ^2.0.0"
   },
   "repository": {
     "type": "git",
