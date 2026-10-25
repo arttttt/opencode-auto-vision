@@ -133,4 +133,11 @@ describe("OpenCode 2: <name>/server must default to an {id, setup} object", () =
     await cleanup();
     expect(disposed).toBe(1);
   });
+
+  it("setup does nothing, rather than throw, under a host without the v2 context it needs", async () => {
+    const { setup } = (await load(`${pkg.name}/server`)).default;
+    for (const ctx of [undefined, {}, { session: { hook: async () => ({ dispose: async () => {} }) } }]) {
+      await expect(setup(ctx)).resolves.toBeUndefined();
+    }
+  });
 });

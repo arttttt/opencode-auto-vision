@@ -19,6 +19,15 @@ import { V2CapabilityGateway } from "./v2/capability-gateway.js";
 import { buildContextHandler } from "./v2/context-handler.js";
 import type { V2Cleanup, V2Context } from "./v2/host.js";
 
+function isV2Context(ctx: unknown): ctx is V2Context {
+  const candidate = ctx as Partial<V2Context> | null | undefined;
+  return (
+    typeof candidate?.session?.hook === "function" &&
+    typeof candidate?.model?.list === "function" &&
+    typeof candidate?.location?.directory === "string"
+  );
+}
+
 /** The plugin's id for loaders that read one: its npm package name. */
 export const PLUGIN_ID = "opencode-auto-vision";
 
@@ -107,7 +116,10 @@ export const AutoVisionPlugin: Plugin = async (input) => {
  * v2's server API has no log or toast service, so failures go to the
  * console only — nothing is written into the session.
  */
-export async function openCodeV2Setup(ctx: V2Context): Promise<V2Cleanup> {
+export async function openCodeV2Setup(ctx: V2Context): Promise<V2Cleanup | void> {
+  // A host that calls setup without the v2 context this needs gets a no-op,
+  // not a crash, as in opencode-pr-signature's v2 setup.
+  if (!isV2Context(ctx)) return;
   const log: Logger = (msg) => console.info(`[${PLUGIN_NAME}] ${msg}`);
   const notify: Notifier = {
     warn: (message) => console.warn(`[${PLUGIN_NAME}] ${message}`),
