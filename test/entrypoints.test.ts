@@ -24,6 +24,12 @@ import { afterAll, describe, expect, it } from "vitest";
 const ROOT = resolve(__dirname, "..");
 const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
 
+// The composition root cleans up its temp dir under $TMPDIR on load: point
+// it at a throwaway one, so the tests never delete a real install's files.
+const temp = mkdtempSync(join(tmpdir(), "opencode-auto-vision-tmp-"));
+process.env.TMPDIR = temp;
+afterAll(() => rmSync(temp, { force: true, recursive: true }));
+
 const install = mkdtempSync(join(tmpdir(), "opencode-auto-vision-install-"));
 mkdirSync(join(install, "node_modules"));
 symlinkSync(ROOT, join(install, "node_modules", pkg.name), "dir");
