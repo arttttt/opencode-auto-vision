@@ -2,8 +2,18 @@
   "name": "opencode-auto-vision",
   "version": "1.0.1",
   "description": "OpenCode plugin that auto-detects a model's media capabilities and routes pasted images/videos to a vision MCP tool — so text-only models can still 'see' pasted media.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/entry/legacy.js",
+  "types": "dist/entry/legacy.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/entry/legacy.d.ts",
+      "default": "./dist/entry/legacy.js"
+    },
+    "./server": {
+      "types": "./dist/entry/server.d.ts",
+      "default": "./dist/entry/server.js"
+    }
+  },
   "type": "module",
   "files": [
     "dist",
@@ -13,6 +23,7 @@
     "clean": "node --eval \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build": "npm run clean && tsc",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json",
+    "pretest": "npm run build",
     "test": "vitest run",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
@@ -42,7 +53,8 @@
     "@opencode-ai/plugin": ">=1.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "opencode": "^1.2.0"
   },
   "repository": {
     "type": "git",

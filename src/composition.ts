@@ -1,6 +1,8 @@
 // Composition root — the only place that knows about concrete adapters and
 // the opencode SDK client. Wires dependencies and registers the hook.
 // (Everything else depends on ports, not on this wiring.)
+// Not an entry: OpenCode loads the plugin through entry/legacy.ts or
+// entry/server.ts.
 
 import type { Plugin } from "@opencode-ai/plugin";
 import { tmpdir } from "node:os";
@@ -13,6 +15,9 @@ import { FileMediaStore } from "./adapters/media-store.js";
 import { buildTransformHandler } from "./plugin.js";
 import { debug, dump } from "./debug.js";
 import type { Logger, Notifier } from "./ports.js";
+
+/** The plugin's id for loaders that read one: its npm package name. */
+export const PLUGIN_ID = "opencode-auto-vision";
 
 export const AutoVisionPlugin: Plugin = async (input) => {
   const { client, directory } = input;
@@ -92,5 +97,3 @@ export const AutoVisionPlugin: Plugin = async (input) => {
     },
   };
 };
-
-export default AutoVisionPlugin;
